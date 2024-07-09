@@ -32,48 +32,30 @@ func make_bag() -> Array[Tetromino]:
 	
 	ret.shuffle()
 	return ret
+func color_cells(coords: Array[Vector2i], atlas_color: Vector2i):
+	for coord in coords:
+		set_cell(0, coord, 0, atlas_color)
 
-func spawn_tetromino(tetronimo: Tetromino):
+func spawn_tetromino(tetromino: Tetromino):
 	const LAYER=0
 	const SOURCE = 0 # got this by hovering over the tiles in the tileset viewer
-	var color = Vector2i(tetronimo, 0)
+	var color = Vector2i(tetromino, 0)
 
-	match tetronimo:
+	match tetromino:
 		Tetromino.I:
-			set_cell(LAYER, Vector2i(3, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(6, 1), SOURCE, color)
+			color_cells([Vector2i(3,1),Vector2i(4,1),Vector2i(5,1),Vector2i(6,1)], color)
 		Tetromino.T:
-			set_cell(LAYER, Vector2i(5, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(6, 1), SOURCE, color)
+			color_cells([Vector2i(5,0),Vector2i(4,1),Vector2i(5,1),Vector2i(6,1)], color)
 		Tetromino.O:
-			set_cell(LAYER, Vector2i(4, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 1), SOURCE, color)
+			color_cells([Vector2i(4,0),Vector2i(5,0),Vector2i(4,1),Vector2i(5,1)], color)
 		Tetromino.Z:
-			set_cell(LAYER, Vector2i(3, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 1), SOURCE, color)
+			color_cells([Vector2i(3,0),Vector2i(4,0),Vector2i(4,1),Vector2i(5,1)], color)
 		Tetromino.S:
-			set_cell(LAYER, Vector2i(4, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(3, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 1), SOURCE, color)
+			color_cells([Vector2i(4,0),Vector2i(5,0),Vector2i(3,1),Vector2i(4,1)], color)
 		Tetromino.J:
-			set_cell(LAYER, Vector2i(5, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 2), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 2), SOURCE, color)
+			color_cells([Vector2i(5,0),Vector2i(5,1),Vector2i(4,2),Vector2i(5,2)], color)
 		Tetromino.L:
-			set_cell(LAYER, Vector2i(4, 0), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 1), SOURCE, color)
-			set_cell(LAYER, Vector2i(4, 2), SOURCE, color)
-			set_cell(LAYER, Vector2i(5, 2), SOURCE, color)
+			color_cells([Vector2i(4,0),Vector2i(4,1),Vector2i(4,2),Vector2i(5,2)], color)
 
 
 # Called when the node enters the scene tree for the first time.
@@ -82,7 +64,7 @@ func _ready() -> void:
 	fill_piece_queue(0, make_bag())
 	fill_piece_queue(7, make_bag())
 	print(piece_queue)
-	spawn_tetromino(Tetromino.L)
+	spawn_tetromino(Tetromino.J)
 
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
