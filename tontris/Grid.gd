@@ -1,6 +1,7 @@
 extends TileMap
 
-var DIMENSIONS = Vector2i(10, 20)
+var VIS_DIMENSIONS = Vector2i(10, 20)
+var TOTAL_DIMENSIONS = Vector2i(10, 25)
 
 var m_squares: Array[Tetromino.Kind] = []
 var m_current_piece: Tetromino.Piece
@@ -10,7 +11,7 @@ var m_current_piece: Tetromino.Piece
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	m_squares.resize(DIMENSIONS.x * DIMENSIONS.y)
+	m_squares.resize(TOTAL_DIMENSIONS.x * TOTAL_DIMENSIONS.y)
 	m_squares.fill(Tetromino.Kind.NONE)
 	# TODO: Actually pull the first piece from the bag
 
@@ -39,34 +40,39 @@ var tetr_kind_to_tile_vec: Array[Vector2i] = [
 ]
 
 func render_board() -> void:
-	for i in range(m_squares.size()):
+	for i in range(VIS_DIMENSIONS.x * VIS_DIMENSIONS.y):
 		set_cell(
 			0,
-			get_grid_coords_from_idx(i),
+			get_vis_coords_from_grid(get_grid_coords_from_idx(i)),
 			0,
 			tetr_kind_to_tile_vec[m_squares[i]]
 		)
 
 	var cur_piece_coords = m_current_piece.get_cells()
 	for i in range(cur_piece_coords.size()):
-		set_cell(
-			0,
-			piece_coord_to_tilemap_coord(cur_piece_coords[i]),
-			0,
-			tetr_kind_to_tile_vec[m_current_piece.get_kind()]
-		)
+		var coord := piece_coord_to_tilemap_coord(cur_piece_coords[i])
+		if coord.y >= 0 && coord.y < VIS_DIMENSIONS.y:
+			set_cell(
+				0,
+				coord,
+				0,
+				tetr_kind_to_tile_vec[m_current_piece.get_kind()]
+			)
 
 
 func get_grid_coords_from_idx(idx: int) -> Vector2i:
-	var row = (DIMENSIONS.y - 1) - (idx / DIMENSIONS.x)
-	var col = idx % DIMENSIONS.x
+	var row = (TOTAL_DIMENSIONS.y - 1) - (idx / TOTAL_DIMENSIONS.x)
+	var col = idx % TOTAL_DIMENSIONS.x
 	return Vector2i(col, row)
 
+func get_vis_coords_from_grid(coord: Vector2i) -> Vector2i:
+	return Vector2i(coord.x, coord.y-(TOTAL_DIMENSIONS.y - VIS_DIMENSIONS.y))
+
 func piece_coord_to_tilemap_coord(p_coord: Vector2i) -> Vector2i:
-	return Vector2i(p_coord.x, (DIMENSIONS.y - 1) - p_coord.y)
+	return Vector2i(p_coord.x, (VIS_DIMENSIONS.y - 1) - p_coord.y)
 
 func piece_coord_to_idx(p_coord: Vector2i) -> int:
-	return (p_coord.y * DIMENSIONS.x) + p_coord.x
+	return (p_coord.y * TOTAL_DIMENSIONS.x) + p_coord.x
 
 #TODO: Remove me
 var m_updated_board = false
