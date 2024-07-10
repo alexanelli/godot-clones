@@ -1,7 +1,5 @@
 extends TileMap
 
-signal board_updated
-
 var DIMENSIONS = Vector2i(10, 20)
 
 var m_squares: Array[Tetromino.Kind] = []
@@ -15,18 +13,19 @@ func _ready() -> void:
 	m_squares.resize(DIMENSIONS.x * DIMENSIONS.y)
 	m_squares.fill(Tetromino.Kind.NONE)
 	# TODO: Actually pull the first piece from the bag
-	m_current_piece = Tetromino.Piece.new(Tetromino.TETR_INFO_J, Vector2i(4, 9))
+
+	m_current_piece = Tetromino.Piece.new(
+		Tetromino.kind_to_info(get_parent().get_node("Queue").pop()),
+		Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
+	)
+	#m_current_piece = Tetromino.Piece.new(Tetromino.TETR_INFO_J, Vector2i(4, 9))
 	# TODO: Remove this debug setting the board state
 	m_squares[piece_coord_to_idx(Vector2i(1, 0))] = Tetromino.Kind.I
 	m_squares[piece_coord_to_idx(Vector2i(2, 0))] = Tetromino.Kind.I
 	m_squares[piece_coord_to_idx(Vector2i(3, 0))] = Tetromino.Kind.I
 	m_squares[piece_coord_to_idx(Vector2i(4, 0))] = Tetromino.Kind.I
 
-	connect("board_updated", on_board_updated)
-
-func color_cells(coords: Array[Vector2i], atlas_color: Vector2i):
-	for coord in coords:
-		set_cell(0, coord, 0, atlas_color)
+	render_board()
 
 var tetr_kind_to_tile_vec: Array[Vector2i] = [
 	Vector2i(7, 0),
@@ -39,7 +38,7 @@ var tetr_kind_to_tile_vec: Array[Vector2i] = [
 	Vector2i(6, 0)
 ]
 
-func on_board_updated():
+func render_board() -> void:
 	for i in range(m_squares.size()):
 		set_cell(
 			0,
@@ -50,7 +49,6 @@ func on_board_updated():
 
 	var cur_piece_coords = m_current_piece.get_cells()
 	for i in range(cur_piece_coords.size()):
-		var kind = m_current_piece.get_kind()
 		set_cell(
 			0,
 			piece_coord_to_tilemap_coord(cur_piece_coords[i]),
@@ -71,12 +69,31 @@ func piece_coord_to_idx(p_coord: Vector2i) -> int:
 	return (p_coord.y * DIMENSIONS.x) + p_coord.x
 
 #TODO: Remove me
-var updated_board = false
+var m_updated_board = false
+
+var ROTATE_TIME: float = 1.0
+var m_time_elapsed_since_rotate: float = 0.0
+var m_rotations: int = 0
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	#TODO: Remove me
-	if !updated_board:
-		emit_signal("board_updated")
-		updated_board = true
-	pass
+	var updated := false
+
+	m_time_elapsed_since_rotate += delta
+
+	while m_time_elapsed_since_rotate > 1.0:
+		m_time_elapsed_since_rotate -= ROTATE_TIME
+		m_current_piece.rotate_left()
+		m_current_piece.accept_rotation()
+		m_rotations += 1
+		if m_rotations == 4:
+			m_current_piece = Tetromino.Piece.new(
+				Tetromino.kind_to_info(get_parent().get_node("Queue").pop()),
+				Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
+			)
+			m_rotations -= 4
+
+		updated = true
+
+	if updated:
+		render_board()
