@@ -33,6 +33,7 @@ var m_queue_position: int = 0
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	update_queue_display_text()
 	pass
 
 func _init() -> void:
@@ -43,11 +44,7 @@ func _init() -> void:
 
 
 func pop() -> Tetromino.Kind:
-	@warning_ignore("integer_division")
-	var bag: int = m_queue_position / Bag.SIZE
-	var bag_pos: int = m_queue_position % Bag.SIZE
-
-	var ret: Tetromino.Kind = m_piece_queue[bag].piece_at_pos(bag_pos)
+	var ret := self.peek(0)
 	m_queue_position = get_wrapped_position_after_adding(1)
 
 	# If we've just taken the last piece out of a bag, shuffle the bag we just
@@ -57,7 +54,37 @@ func pop() -> Tetromino.Kind:
 		var idx_to_shuffle = get_wrapped_position_after_adding(7) / Bag.SIZE
 		m_piece_queue[idx_to_shuffle].shuffle()
 
+	update_queue_display_text()
 	return ret
+
+func peek(depth: int) -> Tetromino.Kind:
+	var queue_position: int = get_wrapped_position_after_adding(depth)
+	@warning_ignore("integer_division")
+	var bag: int = queue_position / Bag.SIZE
+	var bag_pos: int = queue_position % Bag.SIZE
+
+	return m_piece_queue[bag].piece_at_pos(bag_pos)
+
+var label_lookup: Array[String] = [
+	"NONE",
+	"[color=#00CDCD]I[/color]",
+	"[color=#9A00CD]T[/color]",
+	"[color=#CDCD00]O[/color]",
+	"[color=#CD0000]Z[/color]",
+	"[color=#00CD00]S[/color]",
+	"[color=#CD6600]J[/color]",
+	"[color=#0000CD]L[/color]"
+]
+
+func update_queue_display_text():
+	get_node("Next").set_text(format_text(label_lookup[self.peek(0)]))
+	get_node("Next2").set_text(format_text(label_lookup[self.peek(1)]))
+	get_node("Next3").set_text(format_text(label_lookup[self.peek(2)]))
+	get_node("Next4").set_text(format_text(label_lookup[self.peek(3)]))
+	get_node("Next5").set_text(format_text(label_lookup[self.peek(4)]))
+
+func format_text(text: String):
+	return "[center]" + text + "[/center]"
 
 func get_wrapped_position_after_adding(add: int) -> int:
 	return (m_queue_position + add) % (Bag.SIZE * NUM_BAGS)
