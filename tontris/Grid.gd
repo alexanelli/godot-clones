@@ -4,29 +4,25 @@ var VIS_DIMENSIONS = Vector2i(10, 20)
 var TOTAL_DIMENSIONS = Vector2i(10, 25)
 
 var m_squares: Array[Tetromino.Kind] = []
-var m_current_piece: Tetromino.Piece
 
 @export var soft_lock_time: int = 5
 @export var hard_lock_time: int = 5
 
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
+func _init():
 	m_squares.resize(TOTAL_DIMENSIONS.x * TOTAL_DIMENSIONS.y)
 	m_squares.fill(Tetromino.Kind.NONE)
-	# TODO: Actually pull the first piece from the bag
 
-	m_current_piece = Tetromino.Piece.new(
-		Tetromino.kind_to_info(get_parent().get_node("Queue").pop()),
-		Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
-	)
-	#m_current_piece = Tetromino.Piece.new(Tetromino.TETR_INFO_J, Vector2i(4, 9))
 	# TODO: Remove this debug setting the board state
 	m_squares[piece_coord_to_idx(Vector2i(1, 0))] = Tetromino.Kind.I
 	m_squares[piece_coord_to_idx(Vector2i(2, 0))] = Tetromino.Kind.I
 	m_squares[piece_coord_to_idx(Vector2i(3, 0))] = Tetromino.Kind.I
 	m_squares[piece_coord_to_idx(Vector2i(4, 0))] = Tetromino.Kind.I
 
-	render_board()
+
+# Called when the node enters the scene tree for the first time.
+func _ready() -> void:
+	get_parent().piece_moved.connect(_on_board_piece_moved)
+
 
 var tetr_kind_to_tile_vec: Array[Vector2i] = [
 	Vector2i(7, 0),
@@ -48,17 +44,6 @@ func render_board() -> void:
 			tetr_kind_to_tile_vec[m_squares[i]]
 		)
 
-	var cur_piece_coords = m_current_piece.get_cells()
-	for i in range(cur_piece_coords.size()):
-		var coord := piece_coord_to_tilemap_coord(cur_piece_coords[i])
-		if coord.y >= 0 && coord.y < VIS_DIMENSIONS.y:
-			set_cell(
-				0,
-				coord,
-				0,
-				tetr_kind_to_tile_vec[m_current_piece.get_kind()]
-			)
-
 
 func get_grid_coords_from_idx(idx: int) -> Vector2i:
 	var row = (TOTAL_DIMENSIONS.y - 1) - (idx / TOTAL_DIMENSIONS.x)
@@ -74,32 +59,20 @@ func piece_coord_to_tilemap_coord(p_coord: Vector2i) -> Vector2i:
 func piece_coord_to_idx(p_coord: Vector2i) -> int:
 	return (p_coord.y * TOTAL_DIMENSIONS.x) + p_coord.x
 
-#TODO: Remove me
-var m_updated_board = false
-
-var ROTATE_TIME: float = 1.0
-var m_time_elapsed_since_rotate: float = 0.0
-var m_rotations: int = 0
-
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	var updated := false
+	pass
 
-	m_time_elapsed_since_rotate += delta
+func _on_board_piece_moved(cur_piece: Tetromino.Piece) -> void:
+	self.render_board()
 
-	while m_time_elapsed_since_rotate > 1.0:
-		m_time_elapsed_since_rotate -= ROTATE_TIME
-		m_current_piece.rotate_left()
-		m_current_piece.accept_rotation()
-		m_rotations += 1
-		if m_rotations == 4:
-			m_current_piece = Tetromino.Piece.new(
-				Tetromino.kind_to_info(get_parent().get_node("Queue").pop()),
-				Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
+	var cur_piece_coords = cur_piece.get_cells()
+	for i in range(cur_piece_coords.size()):
+		var coord := piece_coord_to_tilemap_coord(cur_piece_coords[i])
+		if coord.y >= 0 && coord.y < VIS_DIMENSIONS.y:
+			set_cell(
+				0,
+				coord,
+				0,
+				tetr_kind_to_tile_vec[cur_piece.get_kind()]
 			)
-			m_rotations -= 4
-
-		updated = true
-
-	if updated:
-		render_board()
