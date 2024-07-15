@@ -43,7 +43,7 @@ func _init() -> void:
 		m_piece_queue[i].shuffle()
 
 
-func pop() -> Tetromino.Kind:
+func queue_pop() -> Tetromino.Kind:
 	var ret := self.peek(0)
 	m_queue_position = get_wrapped_position_after_adding(1)
 

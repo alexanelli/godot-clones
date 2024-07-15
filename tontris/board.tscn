@@ -1,15 +1,17 @@
-[gd_scene load_steps=6 format=3 uid="uid://dfc4qdrmbfynp"]
+[gd_scene load_steps=7 format=3 uid="uid://dfc4qdrmbfynp"]
 
 [ext_resource type="Script" path="res://Board.gd" id="1_icldh"]
 [ext_resource type="Script" path="res://Hold.gd" id="1_mwp3p"]
 [ext_resource type="TileSet" uid="uid://b4ge0tnuudel5" path="res://tileset.tres" id="3_cgcj6"]
 [ext_resource type="Script" path="res://Grid.gd" id="4_cki6x"]
 [ext_resource type="Script" path="res://Queue.gd" id="5_xt0jo"]
+[ext_resource type="Script" path="res://Controller.gd" id="6_frwl3"]
 
 [node name="Game" type="Node2D"]
 
 [node name="Camera2D" type="Camera2D" parent="."]
 anchor_mode = 0
+zoom = Vector2(0.67, 0.76)
 
 [node name="Board" type="Node2D" parent="Camera2D"]
 position = Vector2(800, 180)
@@ -21,6 +23,7 @@ offset_top = 1.0
 offset_right = -28.0
 offset_bottom = 29.0
 theme_override_font_sizes/normal_font_size = 20
+bbcode_enabled = true
 text = "HOLD"
 fit_content = true
 script = ExtResource("1_mwp3p")
@@ -85,3 +88,6 @@ offset_left = 2.0
 offset_top = 656.0
 offset_right = 318.0
 offset_bottom = 698.0
+
+[node name="Controller" type="Node" parent="."]
+script = ExtResource("6_frwl3")

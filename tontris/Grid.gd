@@ -13,10 +13,10 @@ func _init():
 	m_squares.fill(Tetromino.Kind.NONE)
 
 	# TODO: Remove this debug setting the board state
-	m_squares[piece_coord_to_idx(Vector2i(1, 0))] = Tetromino.Kind.I
-	m_squares[piece_coord_to_idx(Vector2i(2, 0))] = Tetromino.Kind.I
-	m_squares[piece_coord_to_idx(Vector2i(3, 0))] = Tetromino.Kind.I
-	m_squares[piece_coord_to_idx(Vector2i(4, 0))] = Tetromino.Kind.I
+	# m_squares[piece_coord_to_idx(Vector2i(1, 0))] = Tetromino.Kind.I
+	# m_squares[piece_coord_to_idx(Vector2i(2, 0))] = Tetromino.Kind.I
+	# m_squares[piece_coord_to_idx(Vector2i(3, 0))] = Tetromino.Kind.I
+	# m_squares[piece_coord_to_idx(Vector2i(4, 0))] = Tetromino.Kind.I
 
 
 # Called when the node enters the scene tree for the first time.
