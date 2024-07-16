@@ -49,7 +49,7 @@ piece.accept_rotation()
 """
 
 
-const STARTING_POSITION = Vector2i(4, 21)
+const STARTING_POSITION = Vector2i(4, 19)
 const NUM_ORIENTATIONS = 4
 
 # The info of where the bricks of a Tetromino lie relative to its origin point

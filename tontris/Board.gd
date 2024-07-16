@@ -3,65 +3,54 @@ extends Node2D
 signal piece_moved(piece: Tetromino.Piece)
 
 var m_current_piece: Tetromino.Piece
+var m_hold_state: ButtonHold
+
+@export var initial_hold_wait_msec = 250
+@export var hold_repeat_msec = 100
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
 	m_current_piece = Tetromino.Piece.new(
 		Tetromino.kind_to_info(get_node("Queue").queue_pop()),
-		Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
 	)
 
+	m_hold_state = ButtonHold.new(initial_hold_wait_msec, hold_repeat_msec)
 	piece_moved.emit(m_current_piece)
-
-var ROTATE_TIME: float = 1.0
-var m_time_elapsed_since_rotate: float = 0.0
-var m_rotations: int = 0
-
-var m_softdrop_held := false
-var m_softdrop_held_duration: float = 0.0
-@export var softdrop_interval: float = 0.25
-
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	if m_softdrop_held:
-		m_softdrop_held_duration += delta
-		# if you've held softdrop for at least an intevals worth of time,
-		# do a drop and subtract an intervals worth of holding time
-		if m_softdrop_held_duration > softdrop_interval:
-			m_softdrop_held_duration -= softdrop_interval
-			m_current_piece.shift_down()
-			piece_moved.emit(m_current_piece)
+	var repeats := m_hold_state.get_repeats()
+	for _i in repeats:
+		match m_hold_state.currently_holding():
+			ButtonHold.HoldType.SHIFT_LEFT:
+				m_current_piece.shift_left()
+			ButtonHold.HoldType.SHIFT_RIGHT:
+				m_current_piece.shift_right()
+			ButtonHold.HoldType.SOFT_DROP:
+				m_current_piece.shift_down()
 
-	# var updated := false
-
-	# m_time_elapsed_since_rotate += delta
-
-	# while m_time_elapsed_since_rotate > 1.0:
-	# 	m_time_elapsed_since_rotate -= ROTATE_TIME
-	# 	m_current_piece.rotate_left()
-	# 	m_current_piece.accept_rotation()
-	# 	m_rotations += 1
-	# 	if m_rotations == 4:
-	# 		m_current_piece = Tetromino.Piece.new(
-	# 			Tetromino.kind_to_info(get_node("Queue").pop()),
-	# 			Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
-	# 		)
-	# 		m_rotations -= 4
-
-	# 	updated = true
-
-	# if updated:
-	# 	piece_moved.emit(m_current_piece)
-
-func _input(event: InputEvent) -> void:
-	if event.is_action_pressed("Rotate_Left"):
-		m_current_piece.rotate_left()
-		m_current_piece.accept_rotation()
+	if repeats > 0:
 		piece_moved.emit(m_current_piece)
 
-	if event.is_action_pressed("Shift_Left"):
-		m_current_piece.shift_left()
+
+func _input(event: InputEvent) -> void:
+	if event.is_action_pressed("Hold"):
+		# swap the kind of the current piece with what's in swap
+		var swap_kind : Tetromino.Kind = $"Hold".swap(m_current_piece.get_kind())
+
+		# if we swapped for NONE, grab the next piece from the queue
+		if swap_kind == Tetromino.Kind.NONE:
+			swap_kind = $"Queue".queue_pop()
+
+		m_current_piece = Tetromino.Piece.new(
+			Tetromino.kind_to_info(swap_kind),
+			Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
+		)
+
+		piece_moved.emit(m_current_piece)
+
+	if event.is_action_pressed("Rotate_Left"):
+		m_current_piece.rotate_left()
 		m_current_piece.accept_rotation()
 		piece_moved.emit(m_current_piece)
 
@@ -70,32 +59,56 @@ func _input(event: InputEvent) -> void:
 		m_current_piece.accept_rotation()
 		piece_moved.emit(m_current_piece)
 
-	if event.is_action_pressed("Shift_Right"):
-		m_current_piece.shift_right()
-		m_current_piece.accept_rotation()
+	handle_shift(event)
+
+func handle_shift(event: InputEvent) -> void:
+	var shift_hold: ButtonHold.HoldType = ButtonHold.HoldType.NONE
+
+	if event.is_released():
+		shift_hold = handle_shift_released(event)
+	else:
+		# Determine highest priority held shift button
+		if event.is_action_pressed("Shift_Left", true):
+			shift_hold = ButtonHold.HoldType.SHIFT_LEFT
+
+		if event.is_action_pressed("Shift_Right", true):
+			shift_hold = ButtonHold.HoldType.SHIFT_RIGHT
+
+		if event.is_action_pressed("Soft_Drop", true):
+			shift_hold = ButtonHold.HoldType.SOFT_DROP
+
+	if m_hold_state.currently_holding() != ButtonHold.HoldType.NONE:
+		return
+
+	if shift_hold != ButtonHold.HoldType.NONE:
+		match shift_hold:
+			ButtonHold.HoldType.SHIFT_LEFT:
+				m_current_piece.shift_left()
+			ButtonHold.HoldType.SHIFT_RIGHT:
+				m_current_piece.shift_right()
+			ButtonHold.HoldType.SOFT_DROP:
+				m_current_piece.shift_down()
+
+		m_hold_state.begin_hold(shift_hold)
 		piece_moved.emit(m_current_piece)
 
-	if event.is_action_pressed("Soft_Drop"):
-		print("softdrop press")
-		m_softdrop_held = true
-		m_current_piece.shift_down()
-		piece_moved.emit(m_current_piece)
+func handle_shift_released(event: InputEvent) -> ButtonHold.HoldType:
+	if event.is_action_released("Shift_Left"):
+		m_hold_state.release(ButtonHold.HoldType.SHIFT_LEFT)
+
+	if event.is_action_released("Shift_Right"):
+		m_hold_state.release(ButtonHold.HoldType.SHIFT_RIGHT)
+
 	if event.is_action_released("Soft_Drop"):
-		print("softdrop release")
-		m_softdrop_held = false
-		m_softdrop_held_duration = 0
+		m_hold_state.release(ButtonHold.HoldType.SOFT_DROP)
 
-	if event.is_action_pressed("Hold"):
-		# swap the kind of the current piece with what's in swap
-		var swap_kind : Tetromino.Kind = $"Hold".swap(m_current_piece.get_kind())
+	if Input.is_action_pressed("Soft_Drop"):
+		return ButtonHold.HoldType.SOFT_DROP
 
-		# if we swapped for NONE, grab the next piece from the queue
-		if swap_kind == Tetromino.Kind.NONE:
-			swap_kind = $"Queue".queue_pop()
-		
-		m_current_piece = Tetromino.Piece.new(
-			Tetromino.kind_to_info(swap_kind),
-			Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
-		)
-		piece_moved.emit(m_current_piece)
+	if Input.is_action_pressed("Shift_Right"):
+		return ButtonHold.HoldType.SHIFT_RIGHT
 
+	if Input.is_action_pressed("Shift_Left"):
+		return ButtonHold.HoldType.SHIFT_LEFT
+
+	return ButtonHold.HoldType.NONE

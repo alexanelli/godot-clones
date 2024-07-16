@@ -16,7 +16,6 @@ zoom = Vector2(0.67, 0.76)
 [node name="Board" type="Node2D" parent="Camera2D"]
 position = Vector2(800, 180)
 script = ExtResource("1_icldh")
-softdrop_interval = null
 
 [node name="Hold" type="RichTextLabel" parent="Camera2D/Board"]
 offset_left = -107.0
