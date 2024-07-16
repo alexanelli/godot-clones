@@ -60,7 +60,7 @@ func piece_coord_to_idx(p_coord: Vector2i) -> int:
 	return (p_coord.y * TOTAL_DIMENSIONS.x) + p_coord.x
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	pass
 
 func _on_board_piece_moved(cur_piece: Tetromino.Piece) -> void:

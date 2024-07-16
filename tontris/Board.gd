@@ -17,10 +17,22 @@ var ROTATE_TIME: float = 1.0
 var m_time_elapsed_since_rotate: float = 0.0
 var m_rotations: int = 0
 
+var m_softdrop_held := false
+var m_softdrop_held_duration: float = 0.0
+@export var softdrop_interval: float = 0.25
+
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-	pass
+	if m_softdrop_held:
+		m_softdrop_held_duration += delta
+		# if you've held softdrop for at least an intevals worth of time,
+		# do a drop and subtract an intervals worth of holding time
+		if m_softdrop_held_duration > softdrop_interval:
+			m_softdrop_held_duration -= softdrop_interval
+			m_current_piece.shift_down()
+			piece_moved.emit(m_current_piece)
+
 	# var updated := false
 
 	# m_time_elapsed_since_rotate += delta
@@ -64,9 +76,14 @@ func _input(event: InputEvent) -> void:
 		piece_moved.emit(m_current_piece)
 
 	if event.is_action_pressed("Soft_Drop"):
+		print("softdrop press")
+		m_softdrop_held = true
 		m_current_piece.shift_down()
-		m_current_piece.accept_rotation()
 		piece_moved.emit(m_current_piece)
+	if event.is_action_released("Soft_Drop"):
+		print("softdrop release")
+		m_softdrop_held = false
+		m_softdrop_held_duration = 0
 
 	if event.is_action_pressed("Hold"):
 		# swap the kind of the current piece with what's in swap
