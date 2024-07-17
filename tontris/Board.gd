@@ -67,15 +67,7 @@ func handle_shift_event(event: InputEvent) -> void:
 	if event.is_released():
 		shift_hold = handle_shift_released_event(event)
 	else:
-		# Determine highest priority held shift button
-		if event.is_action_pressed("Shift_Left", true):
-			shift_hold = ButtonHold.HoldType.SHIFT_LEFT
-
-		if event.is_action_pressed("Shift_Right", true):
-			shift_hold = ButtonHold.HoldType.SHIFT_RIGHT
-
-		if event.is_action_pressed("Soft_Drop", true):
-			shift_hold = ButtonHold.HoldType.SOFT_DROP
+		shift_hold = handle_shift_pressed_event_hold_priority(event)
 
 	if m_hold_state.currently_holding() != ButtonHold.HoldType.NONE:
 		return
@@ -83,7 +75,19 @@ func handle_shift_event(event: InputEvent) -> void:
 	if shift_hold != ButtonHold.HoldType.NONE:
 		try_shift(shift_hold)
 		m_hold_state.begin_hold(shift_hold)
-		$"Grid".update_current_piece(m_current_piece)
+
+func handle_shift_pressed_event_hold_priority(event: InputEvent) -> ButtonHold.HoldType:
+	if event.is_action_pressed("Soft_Drop", true):
+		return ButtonHold.HoldType.SOFT_DROP
+
+	if event.is_action_pressed("Shift_Right", true):
+		return ButtonHold.HoldType.SHIFT_RIGHT
+
+	if event.is_action_pressed("Shift_Left", true):
+		return ButtonHold.HoldType.SHIFT_LEFT
+
+	return ButtonHold.HoldType.NONE
+
 
 func handle_shift_released_event(event: InputEvent) -> ButtonHold.HoldType:
 	if event.is_action_released("Shift_Left"):
