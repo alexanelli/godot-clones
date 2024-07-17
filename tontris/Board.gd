@@ -34,17 +34,7 @@ func _on_shift_down_timer() -> void:
 func _process(_delta: float) -> void:
 	var repeats := m_hold_state.get_repeats()
 	for _i in repeats:
-		match m_hold_state.currently_holding():
-			ButtonHold.HoldType.SHIFT_LEFT:
-				m_current_piece.shift_left()
-			ButtonHold.HoldType.SHIFT_RIGHT:
-				m_current_piece.shift_right()
-			ButtonHold.HoldType.SOFT_DROP:
-				m_current_piece.shift_down()
-				m_shift_down_timer.start()
-
-	if repeats > 0:
-		$"Grid".update_current_piece(m_current_piece)
+		try_shift(m_hold_state.currently_holding())
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("Hold"):
@@ -72,13 +62,13 @@ func _input(event: InputEvent) -> void:
 		m_current_piece.accept_rotation()
 		$"Grid".update_current_piece(m_current_piece)
 
-	handle_shift(event)
+	handle_shift_event(event)
 
-func handle_shift(event: InputEvent) -> void:
+func handle_shift_event(event: InputEvent) -> void:
 	var shift_hold: ButtonHold.HoldType = ButtonHold.HoldType.NONE
 
 	if event.is_released():
-		shift_hold = handle_shift_released(event)
+		shift_hold = handle_shift_released_event(event)
 	else:
 		# Determine highest priority held shift button
 		if event.is_action_pressed("Shift_Left", true):
@@ -94,19 +84,11 @@ func handle_shift(event: InputEvent) -> void:
 		return
 
 	if shift_hold != ButtonHold.HoldType.NONE:
-		match shift_hold:
-			ButtonHold.HoldType.SHIFT_LEFT:
-				m_current_piece.shift_left()
-			ButtonHold.HoldType.SHIFT_RIGHT:
-				m_current_piece.shift_right()
-			ButtonHold.HoldType.SOFT_DROP:
-				m_current_piece.shift_down()
-				m_shift_down_timer.start()
-
+		try_shift(shift_hold)
 		m_hold_state.begin_hold(shift_hold)
 		$"Grid".update_current_piece(m_current_piece)
 
-func handle_shift_released(event: InputEvent) -> ButtonHold.HoldType:
+func handle_shift_released_event(event: InputEvent) -> ButtonHold.HoldType:
 	if event.is_action_released("Shift_Left"):
 		m_hold_state.release(ButtonHold.HoldType.SHIFT_LEFT)
 
@@ -126,3 +108,30 @@ func handle_shift_released(event: InputEvent) -> ButtonHold.HoldType:
 		return ButtonHold.HoldType.SHIFT_LEFT
 
 	return ButtonHold.HoldType.NONE
+
+# Using HoldType for this seems very hacky
+func try_shift(t: ButtonHold.HoldType) -> bool:
+	if t == ButtonHold.HoldType.NONE:
+		return false
+
+	var shift_fn: Callable
+	match t:
+		ButtonHold.HoldType.SHIFT_LEFT:
+			shift_fn = m_current_piece.shift_left
+		ButtonHold.HoldType.SHIFT_RIGHT:
+			shift_fn = m_current_piece.shift_right
+		ButtonHold.HoldType.SOFT_DROP:
+			shift_fn = m_current_piece.shift_down
+
+	var current_pos := m_current_piece.get_position()
+	shift_fn.call()
+
+	if !$"Grid".in_valid_position(m_current_piece):
+		m_current_piece.set_position(current_pos)
+		return false
+
+	if t == ButtonHold.HoldType.SOFT_DROP:
+		m_shift_down_timer.start()
+
+	$"Grid".update_current_piece(m_current_piece)
+	return true
