@@ -1,7 +1,5 @@
 extends Node2D
 
-signal piece_moved(piece: Tetromino.Piece)
-
 var m_current_piece: Tetromino.Piece
 var m_hold_state: ButtonHold
 var m_shift_down_timer: Timer
@@ -23,12 +21,13 @@ func _ready() -> void:
 	)
 
 	m_hold_state = ButtonHold.new(initial_hold_wait_msec, hold_repeat_msec)
-	piece_moved.emit(m_current_piece)
+	$"Grid".update_current_piece(m_current_piece)
 
 func _on_shift_down_timer() -> void:
 	# m_current_piece.shift_down()
-	$"Grid".try_move(m_current_piece.shift_down)
-	piece_moved.emit(m_current_piece)
+	# TODO: Fix this
+	#$"Grid".try_move(m_current_piece.shift_down)
+	$"Grid".update_current_piece(m_current_piece)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
@@ -44,8 +43,7 @@ func _process(_delta: float) -> void:
 				m_shift_down_timer.start()
 
 	if repeats > 0:
-		piece_moved.emit(m_current_piece)
-
+		$"Grid".update_current_piece(m_current_piece)
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("Hold"):
@@ -61,17 +59,17 @@ func _input(event: InputEvent) -> void:
 			Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
 		)
 
-		piece_moved.emit(m_current_piece)
+		$"Grid".update_current_piece(m_current_piece)
 
 	if event.is_action_pressed("Rotate_Left"):
 		m_current_piece.rotate_left()
 		m_current_piece.accept_rotation()
-		piece_moved.emit(m_current_piece)
+		$"Grid".update_current_piece(m_current_piece)
 
 	if event.is_action_pressed("Rotate_Right"):
 		m_current_piece.rotate_right()
 		m_current_piece.accept_rotation()
-		piece_moved.emit(m_current_piece)
+		$"Grid".update_current_piece(m_current_piece)
 
 	handle_shift(event)
 
@@ -105,7 +103,7 @@ func handle_shift(event: InputEvent) -> void:
 				m_shift_down_timer.start()
 
 		m_hold_state.begin_hold(shift_hold)
-		piece_moved.emit(m_current_piece)
+		$"Grid".update_current_piece(m_current_piece)
 
 func handle_shift_released(event: InputEvent) -> ButtonHold.HoldType:
 	if event.is_action_released("Shift_Left"):

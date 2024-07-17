@@ -1,5 +1,12 @@
 extends TileMap
 
+enum Layer {
+	Base,
+	Shadow,
+	Stack,
+	Piece,
+}
+
 var VIS_DIMENSIONS = Vector2i(10, 20)
 var TOTAL_DIMENSIONS = Vector2i(10, 25)
 
@@ -21,8 +28,7 @@ func _init():
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-	get_parent().piece_moved.connect(_on_board_piece_moved)
-
+	pass
 
 var tetr_kind_to_tile_vec: Array[Vector2i] = [
 	Vector2i(7, 0),
@@ -35,6 +41,8 @@ var tetr_kind_to_tile_vec: Array[Vector2i] = [
 	Vector2i(6, 0)
 ]
 
+# TODO: we'll want some variant of this once we're emplacing onto the piece
+# stack, but it will affect layer 2
 func render_board() -> void:
 	for i in range(VIS_DIMENSIONS.x * VIS_DIMENSIONS.y):
 		set_cell(
@@ -43,6 +51,20 @@ func render_board() -> void:
 			0,
 			tetr_kind_to_tile_vec[m_squares[i]]
 		)
+
+
+func update_current_piece(piece: Tetromino.Piece) -> void:
+	clear_layer(Layer.Piece)
+	# TODO: Handle drop shadow
+	var cells := piece.get_cells()
+	for i in cells.size():
+		set_cell(
+			Layer.Piece,
+			piece_coord_to_tilemap_coord(cells[i]),
+			0,
+			tetr_kind_to_tile_vec[piece.get_kind()],
+		)
+
 
 
 func get_grid_coords_from_idx(idx: int) -> Vector2i:
@@ -69,17 +91,3 @@ func place(cur_piece: Tetromino.Piece) -> void:
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
 	pass
-
-func _on_board_piece_moved(cur_piece: Tetromino.Piece) -> void:
-	self.render_board()
-
-	var cur_piece_coords := cur_piece.get_cells()
-	for i in range(cur_piece_coords.size()):
-		var coord := piece_coord_to_tilemap_coord(cur_piece_coords[i])
-		if coord.y >= 0 && coord.y < VIS_DIMENSIONS.y:
-			set_cell(
-				0,
-				coord,
-				0,
-				tetr_kind_to_tile_vec[cur_piece.get_kind()]
-			)
