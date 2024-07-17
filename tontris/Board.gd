@@ -24,11 +24,8 @@ func _ready() -> void:
 	$"Grid".update_current_piece(m_current_piece)
 
 func _on_shift_down_timer() -> void:
-	# m_current_piece.shift_down()
-	# TODO: Fix this
 	#$"Grid".try_move(m_current_piece.shift_down)
-	#$"Grid".update_current_piece(m_current_piece)
-	pass
+	try_shift(ButtonHold.HoldType.SOFT_DROP)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
