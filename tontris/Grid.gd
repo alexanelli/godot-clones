@@ -55,7 +55,7 @@ func render_board() -> void:
 
 func update_current_piece(piece: Tetromino.Piece) -> void:
 	clear_layer(Layer.Piece)
-	# TODO: Handle drop shadow
+	clear_layer(Layer.Shadow)
 	var cells := piece.get_cells()
 	for i in cells.size():
 		set_cell(
@@ -65,7 +65,37 @@ func update_current_piece(piece: Tetromino.Piece) -> void:
 			tetr_kind_to_tile_vec[piece.get_kind()],
 		)
 
+	# Start at bottom of board and shift piece up until it is in a valid position,
+	# then use that as the position for the drop shadow
+	var current_position := piece.get_position()
+	for y in range(current_position.y + 1):
+		piece.set_position(Vector2i(current_position.x, y))
+		if in_valid_position(piece):
+			cells = piece.get_cells()
+			for i in cells.size():
+				set_cell(
+					Layer.Shadow,
+					piece_coord_to_tilemap_coord(cells[i]),
+					0,
+					tetr_kind_to_tile_vec[piece.get_kind()],
+				)
 
+			break
+
+	# Put piece back in its actual position once we're done calcing shadow
+	piece.set_position(current_position)
+
+func in_valid_position(piece: Tetromino.Piece) -> bool:
+	var cells := piece.get_cells()
+
+	for i in cells.size():
+		if !(cells[i].x >= 0 && cells[i].x < TOTAL_DIMENSIONS.x &&
+			cells[i].y >= 0 && cells[i].y < TOTAL_DIMENSIONS.y &&
+			m_squares[piece_coord_to_idx(cells[i])] == Tetromino.Kind.NONE):
+
+			return false
+
+	return true
 
 func get_grid_coords_from_idx(idx: int) -> Vector2i:
 	var row = (TOTAL_DIMENSIONS.y - 1) - (idx / TOTAL_DIMENSIONS.x)

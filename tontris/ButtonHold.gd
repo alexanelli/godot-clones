@@ -39,6 +39,9 @@ Returns the number of repeats that should occur since the last time this functio
 was called
 """
 func get_repeats() -> int:
+	if m_hold_type == HoldType.NONE:
+		return 0
+
 	var current_tick := Time.get_ticks_usec()
 	var repeats := (current_tick - m_last_repeat_tick) / m_repeat_time_usec
 	m_last_repeat_tick += m_repeat_time_usec * repeats

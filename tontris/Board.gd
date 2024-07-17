@@ -27,7 +27,8 @@ func _on_shift_down_timer() -> void:
 	# m_current_piece.shift_down()
 	# TODO: Fix this
 	#$"Grid".try_move(m_current_piece.shift_down)
-	$"Grid".update_current_piece(m_current_piece)
+	#$"Grid".update_current_piece(m_current_piece)
+	pass
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:

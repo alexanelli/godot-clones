@@ -173,6 +173,12 @@ class Piece:
 	func shift_right() -> void:
 		m_position += Vector2i(1, 0)
 
+	func get_position() -> Vector2i:
+		return m_position
+
+	func set_position(pos: Vector2i) -> void:
+		m_position = pos
+
 	# Returns the absolute positions of the cells occupied by the piece in its
 	# current rotation. Positions are interpreted as cell 0, 0 being the bottom
 	# left of the board, and increasing to the up and right.
