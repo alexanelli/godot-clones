@@ -4,12 +4,20 @@ signal piece_moved(piece: Tetromino.Piece)
 
 var m_current_piece: Tetromino.Piece
 var m_hold_state: ButtonHold
+var m_shift_down_timer: Timer
 
 @export var initial_hold_wait_msec = 250
 @export var hold_repeat_msec = 100
+@export var piece_falling_speed = 1
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
+	m_shift_down_timer = Timer.new()
+	add_child(m_shift_down_timer)
+	m_shift_down_timer.wait_time = piece_falling_speed
+	m_shift_down_timer.start()
+	m_shift_down_timer.timeout.connect(_on_shift_down_timer)
+
 	m_current_piece = Tetromino.Piece.new(
 		Tetromino.kind_to_info(get_node("Queue").queue_pop()),
 	)
@@ -17,8 +25,13 @@ func _ready() -> void:
 	m_hold_state = ButtonHold.new(initial_hold_wait_msec, hold_repeat_msec)
 	piece_moved.emit(m_current_piece)
 
+func _on_shift_down_timer() -> void:
+	# m_current_piece.shift_down()
+	$"Grid".try_move(m_current_piece.shift_down)
+	piece_moved.emit(m_current_piece)
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
+func _process(_delta: float) -> void:
 	var repeats := m_hold_state.get_repeats()
 	for _i in repeats:
 		match m_hold_state.currently_holding():
@@ -28,6 +41,7 @@ func _process(delta: float) -> void:
 				m_current_piece.shift_right()
 			ButtonHold.HoldType.SOFT_DROP:
 				m_current_piece.shift_down()
+				m_shift_down_timer.start()
 
 	if repeats > 0:
 		piece_moved.emit(m_current_piece)
@@ -88,6 +102,7 @@ func handle_shift(event: InputEvent) -> void:
 				m_current_piece.shift_right()
 			ButtonHold.HoldType.SOFT_DROP:
 				m_current_piece.shift_down()
+				m_shift_down_timer.start()
 
 		m_hold_state.begin_hold(shift_hold)
 		piece_moved.emit(m_current_piece)

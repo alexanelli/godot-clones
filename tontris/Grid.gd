@@ -59,6 +59,13 @@ func piece_coord_to_tilemap_coord(p_coord: Vector2i) -> Vector2i:
 func piece_coord_to_idx(p_coord: Vector2i) -> int:
 	return (p_coord.y * TOTAL_DIMENSIONS.x) + p_coord.x
 
+func try_move(piece_shift: Callable, _if_legal: Callable, _if_illegal: Callable):
+	piece_shift.call()
+
+func place(cur_piece: Tetromino.Piece) -> void:
+	for cell in cur_piece.get_cells():
+		m_squares[piece_coord_to_idx(cell)] = cur_piece.Kind
+
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(_delta: float) -> void:
 	pass
@@ -66,7 +73,7 @@ func _process(_delta: float) -> void:
 func _on_board_piece_moved(cur_piece: Tetromino.Piece) -> void:
 	self.render_board()
 
-	var cur_piece_coords = cur_piece.get_cells()
+	var cur_piece_coords := cur_piece.get_cells()
 	for i in range(cur_piece_coords.size()):
 		var coord := piece_coord_to_tilemap_coord(cur_piece_coords[i])
 		if coord.y >= 0 && coord.y < VIS_DIMENSIONS.y:
