@@ -52,18 +52,21 @@ func render_board() -> void:
 			tetr_kind_to_tile_vec[m_squares[i]]
 		)
 
-
-func update_current_piece(piece: Tetromino.Piece) -> void:
-	clear_layer(Layer.Piece)
-	clear_layer(Layer.Shadow)
+func draw_piece(piece: Tetromino.Piece, layer: int) -> void:
 	var cells := piece.get_cells()
 	for i in cells.size():
 		set_cell(
-			Layer.Piece,
+			layer,
 			piece_coord_to_tilemap_coord(cells[i]),
 			0,
 			tetr_kind_to_tile_vec[piece.get_kind()],
 		)
+
+
+func update_current_piece(piece: Tetromino.Piece) -> void:
+	clear_layer(Layer.Piece)
+	clear_layer(Layer.Shadow)
+	draw_piece(piece, Layer.Piece)
 
 	# Start at bottom of board and shift piece up until it is in a valid position,
 	# then use that as the position for the drop shadow
@@ -71,15 +74,7 @@ func update_current_piece(piece: Tetromino.Piece) -> void:
 	for y in range(current_position.y + 1):
 		piece.set_position(Vector2i(current_position.x, y))
 		if in_valid_position(piece):
-			cells = piece.get_cells()
-			for i in cells.size():
-				set_cell(
-					Layer.Shadow,
-					piece_coord_to_tilemap_coord(cells[i]),
-					0,
-					tetr_kind_to_tile_vec[piece.get_kind()],
-				)
-
+			draw_piece(piece, Layer.Shadow)
 			break
 
 	# Put piece back in its actual position once we're done calcing shadow
