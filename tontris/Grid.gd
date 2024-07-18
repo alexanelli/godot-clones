@@ -77,9 +77,10 @@ func update_current_piece(piece: Tetromino.Piece) -> void:
 	# Start at bottom of board and shift piece up until it is in a valid position,
 	# then use that as the position for the drop shadow
 	var current_position := piece.get_position()
-	for y in range(current_position.y + 1):
-		piece.set_position(Vector2i(current_position.x, y))
-		if in_valid_position(piece):
+	for y in range(current_position.y-1, -1, -1):
+		piece.set_position(Vector2i(current_position.x, y-1))
+		if !in_valid_position(piece):
+			piece.set_position(Vector2i(current_position.x, y))
 			draw_piece(piece, Layer.Shadow)
 			break
 
