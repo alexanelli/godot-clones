@@ -38,6 +38,7 @@ layer_1/name = "Shadow"
 layer_1/modulate = Color(1, 1, 1, 0.25098)
 layer_1/tile_data = PackedInt32Array()
 layer_2/name = "Stack"
+layer_2/modulate = Color(0.65, 0.65, 0.65, 1)
 layer_2/tile_data = PackedInt32Array()
 layer_3/name = "Piece"
 layer_3/tile_data = PackedInt32Array()

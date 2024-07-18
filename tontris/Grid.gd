@@ -62,6 +62,12 @@ func draw_piece(piece: Tetromino.Piece, layer: int) -> void:
 			tetr_kind_to_tile_vec[piece.get_kind()],
 		)
 
+func lock_piece(piece: Tetromino.Piece) -> void:
+	var cells := piece.get_cells()
+	for i in cells.size():
+		m_squares[piece_coord_to_idx(cells[i])] = piece.get_kind()
+
+	draw_piece(piece, Layer.Stack)
 
 func update_current_piece(piece: Tetromino.Piece) -> void:
 	clear_layer(Layer.Piece)

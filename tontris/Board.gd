@@ -4,9 +4,13 @@ var m_current_piece: Tetromino.Piece
 var m_hold_state: ButtonHold
 var m_shift_down_timer: Timer
 
-@export var initial_hold_wait_msec = 250
-@export var hold_repeat_msec = 100
+@export var initial_hold_wait_msec: int = 250
+@export var hold_repeat_msec: int = 100
 @export var piece_falling_speed = 1
+@export var piece_lock_delay_ms: int = 1000
+
+var m_accrued_lock_time: float = 0.0
+var m_locking: bool = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -24,7 +28,14 @@ func _on_shift_down_timer() -> void:
 	try_shift(ButtonHold.HoldType.SOFT_DROP)
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	if m_locking:
+		m_accrued_lock_time += delta
+		if m_accrued_lock_time >= (piece_lock_delay_ms/1000.0):
+			$"Grid".lock_piece(m_current_piece)
+			create_new_current_piece($"Queue".queue_pop())
+			return
+
 	var repeats := m_hold_state.get_repeats()
 	for _i in repeats:
 		try_shift(m_hold_state.currently_holding())
@@ -57,6 +68,8 @@ func create_new_current_piece(kind: Tetromino.Kind) -> void:
 	)
 
 	m_shift_down_timer.start()
+	m_accrued_lock_time = 0.0
+	m_locking = false
 	$"Grid".update_current_piece(m_current_piece)
 
 
@@ -133,20 +146,34 @@ func try_shift(t: ButtonHold.HoldType) -> bool:
 	if t == ButtonHold.HoldType.SOFT_DROP:
 		m_shift_down_timer.start()
 
+	m_locking = is_current_piece_bottomed_out()
 	$"Grid".update_current_piece(m_current_piece)
 	return true
+
+func is_current_piece_bottomed_out() -> bool:
+	var current_pos: Vector2i = m_current_piece.get_position()
+	m_current_piece.set_position(Vector2i(current_pos.x, current_pos.y - 1))
+	var bottomed_out: bool = !$"Grid".in_valid_position(m_current_piece)
+	m_current_piece.set_position(current_pos)
+	return bottomed_out
 
 func try_rotate(rotate_fn: Callable) -> bool:
 	rotate_fn.call()
 	if $"Grid".in_valid_position(m_current_piece):
 		m_current_piece.accept_rotation()
 		$"Grid".update_current_piece(m_current_piece)
+		if is_current_piece_bottomed_out():
+			m_locking = true
+
 		return true
 
 	while m_current_piece.advance_current_offset():
 		if $"Grid".in_valid_position(m_current_piece):
 			m_current_piece.accept_rotation()
 			$"Grid".update_current_piece(m_current_piece)
+			if is_current_piece_bottomed_out():
+				m_locking = true
+
 			return true
 
 	m_current_piece.reject_rotation()
