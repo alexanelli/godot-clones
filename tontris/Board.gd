@@ -16,12 +16,8 @@ func _ready() -> void:
 	m_shift_down_timer.start()
 	m_shift_down_timer.timeout.connect(_on_shift_down_timer)
 
-	m_current_piece = Tetromino.Piece.new(
-		Tetromino.kind_to_info(get_node("Queue").queue_pop()),
-	)
-
 	m_hold_state = ButtonHold.new(initial_hold_wait_msec, hold_repeat_msec)
-	$"Grid".update_current_piece(m_current_piece)
+	create_new_current_piece($"Queue".queue_pop())
 
 func _on_shift_down_timer() -> void:
 	#$"Grid".try_move(m_current_piece.shift_down)
@@ -35,31 +31,34 @@ func _process(_delta: float) -> void:
 
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("Hold"):
-		# swap the kind of the current piece with what's in swap
-		var swap_kind : Tetromino.Kind = $"Hold".swap(m_current_piece.get_kind())
-
-		# if we swapped for NONE, grab the next piece from the queue
-		if swap_kind == Tetromino.Kind.NONE:
-			swap_kind = $"Queue".queue_pop()
-
-		m_current_piece = Tetromino.Piece.new(
-			Tetromino.kind_to_info(swap_kind),
-			Vector2i(4, 9), #the location can be removed when not testing, it defaults to the proper position
-		)
-
-		$"Grid".update_current_piece(m_current_piece)
+		handle_hold_event()
 
 	if event.is_action_pressed("Rotate_Left"):
-		m_current_piece.rotate_left()
-		m_current_piece.accept_rotation()
-		$"Grid".update_current_piece(m_current_piece)
+		try_rotate(m_current_piece.rotate_left)
 
 	if event.is_action_pressed("Rotate_Right"):
-		m_current_piece.rotate_right()
-		m_current_piece.accept_rotation()
-		$"Grid".update_current_piece(m_current_piece)
+		try_rotate(m_current_piece.rotate_right)
 
 	handle_shift_event(event)
+
+func handle_hold_event():
+	# swap the kind of the current piece with what's in swap
+	var swap_kind : Tetromino.Kind = $"Hold".swap(m_current_piece.get_kind())
+
+	# if we swapped for NONE, grab the next piece from the queue
+	if swap_kind == Tetromino.Kind.NONE:
+		swap_kind = $"Queue".queue_pop()
+
+	create_new_current_piece(swap_kind)
+
+func create_new_current_piece(kind: Tetromino.Kind) -> void:
+	m_current_piece = Tetromino.Piece.new(
+		Tetromino.kind_to_info(kind),
+	)
+
+	m_shift_down_timer.start()
+	$"Grid".update_current_piece(m_current_piece)
+
 
 func handle_shift_event(event: InputEvent) -> void:
 	var shift_hold: ButtonHold.HoldType = ButtonHold.HoldType.NONE
@@ -136,3 +135,19 @@ func try_shift(t: ButtonHold.HoldType) -> bool:
 
 	$"Grid".update_current_piece(m_current_piece)
 	return true
+
+func try_rotate(rotate_fn: Callable) -> bool:
+	rotate_fn.call()
+	if $"Grid".in_valid_position(m_current_piece):
+		m_current_piece.accept_rotation()
+		$"Grid".update_current_piece(m_current_piece)
+		return true
+
+	while m_current_piece.advance_current_offset():
+		if $"Grid".in_valid_position(m_current_piece):
+			m_current_piece.accept_rotation()
+			$"Grid".update_current_piece(m_current_piece)
+			return true
+
+	m_current_piece.reject_rotation()
+	return false
