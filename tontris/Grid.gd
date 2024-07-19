@@ -31,7 +31,7 @@ func _ready() -> void:
 	pass
 
 var tetr_kind_to_tile_vec: Array[Vector2i] = [
-	Vector2i(7, 0),
+	Vector2i(-1, -1), # clears the cell
 	Vector2i(0, 0),
 	Vector2i(1, 0),
 	Vector2i(2, 0),
@@ -40,17 +40,6 @@ var tetr_kind_to_tile_vec: Array[Vector2i] = [
 	Vector2i(5, 0),
 	Vector2i(6, 0)
 ]
-
-# TODO: we'll want some variant of this once we're emplacing onto the piece
-# stack, but it will affect layer 2
-func render_board() -> void:
-	for i in range(VIS_DIMENSIONS.x * VIS_DIMENSIONS.y):
-		set_cell(
-			0,
-			get_vis_coords_from_grid(get_grid_coords_from_idx(i)),
-			0,
-			tetr_kind_to_tile_vec[m_squares[i]]
-		)
 
 func draw_piece(piece: Tetromino.Piece, layer: int) -> void:
 	var cells := piece.get_cells()
@@ -106,6 +95,49 @@ func in_valid_position(piece: Tetromino.Piece) -> bool:
 			return false
 
 	return true
+
+# returns the number of lines cleared
+func check_and_clear_lines() -> int:
+	# This entire algo feels as brute-force as it possibly could be, and there's
+	# probably a better way.
+	var cleared_lines: int = 0
+	var row: int = 0
+	while row < TOTAL_DIMENSIONS.y:
+		var filled_cells: int = 0
+		for cell in range(TOTAL_DIMENSIONS.x * row, TOTAL_DIMENSIONS.x * (row + 1)):
+			if m_squares[cell] != Tetromino.Kind.NONE:
+				filled_cells += 1
+
+		if filled_cells == TOTAL_DIMENSIONS.x:
+			cleared_lines += 1
+			clear_line(row)
+			# Recheck same line once we've lines down shifted down
+			continue
+
+		row += 1
+
+	if cleared_lines > 0:
+		redraw_stack()
+
+	return cleared_lines
+
+func clear_line(line: int):
+	for cell in range(TOTAL_DIMENSIONS.x * line, TOTAL_DIMENSIONS.x * TOTAL_DIMENSIONS.y):
+		var new_cell_value := Tetromino.Kind.NONE
+		var target_cell: int = cell + TOTAL_DIMENSIONS.x
+		if target_cell < m_squares.size():
+			new_cell_value = m_squares[target_cell]
+
+		m_squares[cell] = new_cell_value
+
+func redraw_stack() -> void:
+	for i in range(VIS_DIMENSIONS.x * VIS_DIMENSIONS.y):
+		set_cell(
+			Layer.Stack,
+			get_vis_coords_from_grid(get_grid_coords_from_idx(i)),
+			0,
+			tetr_kind_to_tile_vec[m_squares[i]]
+		)
 
 func get_grid_coords_from_idx(idx: int) -> Vector2i:
 	var row = (TOTAL_DIMENSIONS.y - 1) - (idx / TOTAL_DIMENSIONS.x)

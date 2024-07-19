@@ -32,9 +32,7 @@ func _process(delta: float) -> void:
 	if m_locking:
 		m_accrued_lock_time += delta
 		if m_accrued_lock_time >= (piece_lock_delay_ms/1000.0):
-			$"Grid".lock_piece(m_current_piece)
-			create_new_current_piece($"Queue".queue_pop())
-			return
+			emplace_current_piece()
 
 	var repeats := m_hold_state.get_repeats()
 	for _i in repeats:
@@ -56,9 +54,7 @@ func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("Hard_Drop"):
 		var drop_position: Vector2i = $"Grid".get_drop_position(m_current_piece)
 		m_current_piece.set_position(drop_position)
-		$"Grid".lock_piece(m_current_piece)
-		create_new_current_piece($"Queue".queue_pop())
-		return
+		emplace_current_piece()
 
 	handle_shift_event(event)
 
@@ -159,6 +155,12 @@ func try_shift(t: ButtonHold.HoldType) -> bool:
 	m_locking = is_current_piece_bottomed_out()
 	$"Grid".update_current_piece(m_current_piece)
 	return true
+
+func emplace_current_piece() -> void:
+	$"Grid".lock_piece(m_current_piece)
+	$"Grid".check_and_clear_lines() #returns number of lines cleared, can be used for scoring later
+	create_new_current_piece($"Queue".queue_pop())
+	return
 
 func is_current_piece_bottomed_out() -> bool:
 	var current_pos: Vector2i = m_current_piece.get_position()
