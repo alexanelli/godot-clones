@@ -43,12 +43,22 @@ func _process(delta: float) -> void:
 func _input(event: InputEvent) -> void:
 	if event.is_action_pressed("Hold"):
 		handle_hold_event()
+		return
 
 	if event.is_action_pressed("Rotate_Left"):
 		try_rotate(m_current_piece.rotate_left)
+		return
 
 	if event.is_action_pressed("Rotate_Right"):
 		try_rotate(m_current_piece.rotate_right)
+		return
+
+	if event.is_action_pressed("Hard_Drop"):
+		var drop_position: Vector2i = $"Grid".get_drop_position(m_current_piece)
+		m_current_piece.set_position(drop_position)
+		$"Grid".lock_piece(m_current_piece)
+		create_new_current_piece($"Queue".queue_pop())
+		return
 
 	handle_shift_event(event)
 

@@ -74,18 +74,26 @@ func update_current_piece(piece: Tetromino.Piece) -> void:
 	clear_layer(Layer.Shadow)
 	draw_piece(piece, Layer.Piece)
 
+	var shadow_position := get_drop_position(piece)
+	var current_position := piece.get_position()
+	piece.set_position(shadow_position)
+	draw_piece(piece, Layer.Shadow)
+	piece.set_position(current_position)
+
+func get_drop_position(piece: Tetromino.Piece) -> Vector2i:
 	# Start at bottom of board and shift piece up until it is in a valid position,
 	# then use that as the position for the drop shadow
+	var ret: Vector2i = piece.get_position()
 	var current_position := piece.get_position()
-	for y in range(current_position.y-1, -1, -1):
+	for y in range(current_position.y, -1, -1):
 		piece.set_position(Vector2i(current_position.x, y-1))
 		if !in_valid_position(piece):
-			piece.set_position(Vector2i(current_position.x, y))
-			draw_piece(piece, Layer.Shadow)
+			ret = Vector2i(current_position.x, y)
 			break
 
 	# Put piece back in its actual position once we're done calcing shadow
 	piece.set_position(current_position)
+	return ret
 
 func in_valid_position(piece: Tetromino.Piece) -> bool:
 	var cells := piece.get_cells()
