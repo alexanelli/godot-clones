@@ -172,18 +172,14 @@ func try_rotate(rotate_fn: Callable) -> bool:
 	if $"Grid".in_valid_position(m_current_piece):
 		m_current_piece.accept_rotation()
 		$"Grid".update_current_piece(m_current_piece)
-		if is_current_piece_bottomed_out():
-			m_locking = true
-
+		m_locking = is_current_piece_bottomed_out()
 		return true
 
 	while m_current_piece.advance_current_offset():
 		if $"Grid".in_valid_position(m_current_piece):
 			m_current_piece.accept_rotation()
 			$"Grid".update_current_piece(m_current_piece)
-			if is_current_piece_bottomed_out():
-				m_locking = true
-
+			m_locking = is_current_piece_bottomed_out()
 			return true
 
 	m_current_piece.reject_rotation()
