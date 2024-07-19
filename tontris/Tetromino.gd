@@ -320,7 +320,7 @@ static var TETR_INFO_O: StaticTetrominoInfo = StaticTetrominoInfo.new(
 	Kind.O,
 )
 
-enum Kind {NONE, I, T, O, Z, S, J, L}
+enum Kind {NONE, I, T, O, Z, S, L, J}
 
 static var kind_to_info_table = [
 	TETR_INFO_O, # Placeholder for none...
@@ -329,8 +329,8 @@ static var kind_to_info_table = [
 	TETR_INFO_O,
 	TETR_INFO_Z,
 	TETR_INFO_S,
-	TETR_INFO_J,
 	TETR_INFO_L,
+	TETR_INFO_J,
 ]
 
 static func kind_to_info(k: Kind) -> StaticTetrominoInfo:
