@@ -3,6 +3,7 @@ extends Node2D
 var m_current_piece: Tetromino.Piece
 var m_hold_state: ButtonHold
 var m_shift_down_timer: Timer
+var m_hold_available: bool
 
 @export var initial_hold_wait_msec: int = 250
 @export var hold_repeat_msec: int = 100
@@ -59,6 +60,9 @@ func _input(event: InputEvent) -> void:
 	handle_shift_event(event)
 
 func handle_hold_event():
+	if !m_hold_available:
+		return
+
 	# swap the kind of the current piece with what's in swap
 	var swap_kind : Tetromino.Kind = $"Hold".swap(m_current_piece.get_kind())
 
@@ -67,6 +71,7 @@ func handle_hold_event():
 		swap_kind = $"Queue".queue_pop()
 
 	create_new_current_piece(swap_kind)
+	m_hold_available = false
 
 func create_new_current_piece(kind: Tetromino.Kind) -> void:
 	m_current_piece = Tetromino.Piece.new(
@@ -76,6 +81,7 @@ func create_new_current_piece(kind: Tetromino.Kind) -> void:
 	m_shift_down_timer.start()
 	m_accrued_lock_time = 0.0
 	m_locking = false
+	m_hold_available = true
 	$"Grid".update_current_piece(m_current_piece)
 
 
